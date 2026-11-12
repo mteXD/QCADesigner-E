@@ -571,16 +571,27 @@ void reorder_layers_button_clicked (GtkWidget *widget, gpointer user_data)
 
 gboolean scroll_event(GtkWidget *widget, GdkEventScroll *event, gpointer user_data)
   {
-  int iDir =
-    GDK_SCROLL_UP == event->direction ? 1 :       // Mouse wheel clicked away from the user
-    GDK_SCROLL_DOWN == event->direction ? -1 : 0, // Mouse wheel clicked towards the user
-    idx = event->state & GDK_CONTROL_MASK ? 0 : 1,
-    x = -1, y = -1,
+  int x = -1, y = -1,
     dist[2] = {0, 0} ;
 
   DBG_CB_HERE (fprintf (stderr, "Entering scroll_event\n")) ;
 
-  dist[idx] = 10 * PAN_STEP * iDir ;
+  switch (event->direction)
+    {
+    case GDK_SCROLL_UP:
+    case GDK_SCROLL_DOWN:
+      dist[event->state & GDK_CONTROL_MASK ? 0 : 1] =
+        10 * PAN_STEP * (GDK_SCROLL_UP == event->direction ? 1 : -1) ;
+      break ;
+    case GDK_SCROLL_LEFT:
+      dist[0] = 10 * PAN_STEP ;
+      break ;
+    case GDK_SCROLL_RIGHT:
+      dist[0] = -10 * PAN_STEP ;
+      break ;
+    default:
+      return FALSE ;
+    }
 
   pan (dist[0], dist[1]) ;
   project_options.bScrolling = TRUE ;
