@@ -36,7 +36,13 @@
 #endif /* ndef WIN32 */
 #include <math.h>
 
+#if defined(HAVE_XINPUT_GESTURES) && defined(GDK_WINDOWING_X11)
+#include <gdk/gdkx.h>
+#include <X11/extensions/XInput2.h>
+#endif
+
 #include "callbacks.h"
+#include "viewport_scroll.h"
 #include "interface.h"
 #include "support.h"
 #include "simulation.h"
@@ -327,6 +333,7 @@ void on_hide_layers_menu_item_activate (GtkWidget *widget, gpointer data)
 
 gboolean drawing_area_button_pressed (GtkWidget *widget, GdkEventButton *event, gpointer user_data)
   {
+  viewport_scroll_cancel (widget) ;
   // Return to default action
   if (3 == event->button)
     gtk_toggle_button_set_active (GTK_TOGGLE_BUTTON (main_window.default_action_button), TRUE) ;
@@ -569,38 +576,123 @@ void reorder_layers_button_clicked (GtkWidget *widget, gpointer user_data)
   layer_selected (NULL, NULL) ;
   }
 
+#if defined(HAVE_XINPUT_GESTURES) && defined(GDK_WINDOWING_X11)
+typedef struct
+  {
+  GtkWidget *widget ;
+  int opcode, device ;
+  double scale, x, y ;
+  } VIEWPORT_PINCH ;
+
+static GdkFilterReturn viewport_pinch_filter (GdkXEvent *native, GdkEvent *event, gpointer data)
+  {
+  VIEWPORT_PINCH *pinch = data ;
+  XEvent *xevent = native ;
+  XGenericEventCookie *cookie = &xevent->xcookie ;
+  XIGesturePinchEvent *gesture ;
+  gboolean acquired = FALSE, handled = FALSE ;
+
+  if (xevent->type != GenericEvent || cookie->extension != pinch->opcode ||
+      cookie->evtype < XI_GesturePinchBegin || cookie->evtype > XI_GesturePinchEnd)
+    return GDK_FILTER_CONTINUE ;
+  if (NULL == cookie->data)
+    {
+    if (!XGetEventData (xevent->xany.display, cookie)) return GDK_FILTER_CONTINUE ;
+    acquired = TRUE ;
+    }
+  gesture = cookie->data ;
+  if (gesture->event == GDK_WINDOW_XID (pinch->widget->window))
+    {
+    handled = TRUE ;
+    if (cookie->evtype == XI_GesturePinchBegin)
+      {
+      viewport_scroll_set_pinching (pinch->widget, TRUE) ;
+      pinch->device = gesture->deviceid ;
+      pinch->scale = 1.0 ;
+      pinch->x = gesture->event_x ;
+      pinch->y = gesture->event_y ;
+      }
+    else if (pinch->device == gesture->deviceid)
+      {
+      if (cookie->evtype == XI_GesturePinchEnd)
+        {
+        pinch->device = -1 ;
+        viewport_scroll_set_pinching (pinch->widget, FALSE) ;
+        }
+      else if (isfinite (gesture->scale) && gesture->scale > 0)
+        {
+        zoom_at_point (gesture->scale / pinch->scale, pinch->x, pinch->y) ;
+        pinch->scale = gesture->scale ;
+        reflect_zoom () ;
+        }
+      }
+    }
+  if (acquired) XFreeEventData (xevent->xany.display, cookie) ;
+  return handled ? GDK_FILTER_REMOVE : GDK_FILTER_CONTINUE ;
+  }
+
+static void viewport_gestures_unrealize (GtkWidget *widget, gpointer data)
+  {
+  gdk_window_remove_filter (NULL, viewport_pinch_filter, data) ;
+  g_signal_handlers_disconnect_by_func (widget, viewport_gestures_unrealize, data) ;
+  g_free (data) ;
+  }
+#endif
+
+static void viewport_apply_pan (int dx, int dy, gpointer data)
+  {
+  int x, y ;
+  pan (dx, dy) ;
+  project_options.bScrolling = TRUE ;
+  gdk_window_scroll (main_window.drawing_area->window, dx, dy) ;
+  real_coords_from_rulers (&x, &y) ;
+  setup_rulers (x + dx, y + dy) ;
+  }
+
+void viewport_gestures_realize (GtkWidget *widget, gpointer data)
+  {
+#if defined(HAVE_XINPUT_GESTURES) && defined(GDK_WINDOWING_X11)
+  Display *display = GDK_WINDOW_XDISPLAY (widget->window) ;
+  int opcode, event_base, error_base, major = 2, minor = 4, count, Nix, byte ;
+  unsigned char bits[XIMaskLen (XI_LASTEVENT)] = {0} ;
+  XIEventMask mask = {XIAllMasterDevices, sizeof (bits), bits}, *existing ;
+  VIEWPORT_PINCH *pinch ;
+#endif
+
+  viewport_scroll_attach (widget, viewport_apply_pan, NULL) ;
+
+#if defined(HAVE_XINPUT_GESTURES) && defined(GDK_WINDOWING_X11)
+
+  if (!XQueryExtension (display, "XInputExtension", &opcode, &event_base, &error_base) ||
+      XIQueryVersion (display, &major, &minor) != Success ||
+      major < 2 || (major == 2 && minor < 4)) return ;
+
+  // Preserve GTK's existing event selection for this device group.
+  existing = XIGetSelectedEvents (display, GDK_WINDOW_XID (widget->window), &count) ;
+  for (Nix = 0 ; existing != NULL && Nix < count ; Nix++)
+    if (existing[Nix].deviceid == mask.deviceid)
+      for (byte = 0 ; byte < MIN (mask.mask_len, existing[Nix].mask_len) ; byte++)
+        bits[byte] |= existing[Nix].mask[byte] ;
+  if (existing != NULL) XFree (existing) ;
+  XISetMask (bits, XI_GesturePinchBegin) ;
+  XISetMask (bits, XI_GesturePinchUpdate) ;
+  XISetMask (bits, XI_GesturePinchEnd) ;
+  gdk_error_trap_push () ;
+  XISelectEvents (display, GDK_WINDOW_XID (widget->window), &mask, 1) ;
+  gdk_flush () ;
+  if (gdk_error_trap_pop ()) return ;
+  pinch = g_new0 (VIEWPORT_PINCH, 1) ;
+  pinch->widget = widget ;
+  pinch->opcode = opcode ;
+  pinch->device = -1 ;
+  gdk_window_add_filter (NULL, viewport_pinch_filter, pinch) ;
+  g_signal_connect (widget, "unrealize", (GCallback)viewport_gestures_unrealize, pinch) ;
+#endif
+  }
+
 gboolean scroll_event(GtkWidget *widget, GdkEventScroll *event, gpointer user_data)
   {
-  int x = -1, y = -1,
-    dist[2] = {0, 0} ;
-
-  DBG_CB_HERE (fprintf (stderr, "Entering scroll_event\n")) ;
-
-  switch (event->direction)
-    {
-    case GDK_SCROLL_UP:
-    case GDK_SCROLL_DOWN:
-      dist[event->state & GDK_CONTROL_MASK ? 0 : 1] =
-        10 * PAN_STEP * (GDK_SCROLL_UP == event->direction ? 1 : -1) ;
-      break ;
-    case GDK_SCROLL_LEFT:
-      dist[0] = 10 * PAN_STEP ;
-      break ;
-    case GDK_SCROLL_RIGHT:
-      dist[0] = -10 * PAN_STEP ;
-      break ;
-    default:
-      return FALSE ;
-    }
-
-  pan (dist[0], dist[1]) ;
-  project_options.bScrolling = TRUE ;
-  gdk_window_scroll (main_window.drawing_area->window, dist[0], dist[1]) ;
-  real_coords_from_rulers (&x, &y) ;
-  x += dist[0] ;
-  y += dist[1] ;
-  setup_rulers (x, y) ;
-  return FALSE ;
+  return viewport_scroll_handle (widget, event) ;
   }
 
 gboolean expose_event(GtkWidget * widget, GdkEventExpose *event, gpointer user_data)
@@ -1042,12 +1134,14 @@ void on_zoom_in_menu_item_activate(GtkMenuItem *menuitem, gpointer user_data)
   {
   DBG_CB_HERE (fprintf (stderr, "Entering on_zoom_in_menu_item_activate\n")) ;
   zoom_in();
+  zoom_in();
   reflect_zoom () ;
   }
 
 void on_zoom_out_menu_item_activate(GtkMenuItem * menuitem, gpointer user_data)
 {
   DBG_CB_HERE (fprintf (stderr, "Entering on_zoom_out_menu_item_activate\n")) ;
+    zoom_out();
     zoom_out();
     reflect_zoom () ;
 }
@@ -2336,6 +2430,7 @@ static void move_selection_to_pointer (QCADDesignObject *anchor)
 void reflect_zoom ()
   {
   int x, y ;
+  viewport_scroll_cancel (main_window.drawing_area) ;
   selection_renderer_update (project_options.srSelection, project_options.design) ;
   real_coords_from_rulers (&x, &y) ;
   setup_rulers (x, y) ;

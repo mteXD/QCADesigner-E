@@ -49,6 +49,7 @@ QCADesigner_SOURCES = \
 	bus_layout_dialog.c                     bus_layout_dialog.h \
 	                                        callback_helpers.h \
 	callbacks.c                             callbacks.h \
+	viewport_scroll.c                       viewport_scroll.h \
 	coherence_vector_properties_dialog.c    coherence_vector_properties_dialog.h \
 	coherence_vector_energy_properties_dialog.c    coherence_vector_energy_properties_dialog.h \
 	custom_widgets.c                        custom_widgets.h \

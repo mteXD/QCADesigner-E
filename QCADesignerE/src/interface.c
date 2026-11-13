@@ -890,6 +890,12 @@ void create_main_window (main_W *main_window){
   gtk_widget_add_accelerator (zoom_in_menu_item,                 "activate", GTK_ACCEL_GROUP (accel_group), GDK_plus,   0,                                 GTK_ACCEL_VISIBLE);
   gtk_widget_add_accelerator (zoom_out_menu_item,                "activate", GTK_ACCEL_GROUP (accel_group), GDK_q,      0,                                 GTK_ACCEL_VISIBLE);
   gtk_widget_add_accelerator (zoom_out_menu_item,                "activate", GTK_ACCEL_GROUP (accel_group), GDK_minus,  0,                                 GTK_ACCEL_VISIBLE);
+  gtk_widget_add_accelerator (zoom_in_menu_item, "activate", accel_group, GDK_plus, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE) ;
+  gtk_widget_add_accelerator (zoom_in_menu_item, "activate", accel_group, GDK_equal, GDK_CONTROL_MASK, 0) ;
+  gtk_widget_add_accelerator (zoom_in_menu_item, "activate", accel_group, GDK_plus, GDK_CONTROL_MASK | GDK_SHIFT_MASK, 0) ;
+  gtk_widget_add_accelerator (zoom_in_menu_item, "activate", accel_group, GDK_KP_Add, GDK_CONTROL_MASK, 0) ;
+  gtk_widget_add_accelerator (zoom_out_menu_item, "activate", accel_group, GDK_minus, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE) ;
+  gtk_widget_add_accelerator (zoom_out_menu_item, "activate", accel_group, GDK_KP_Subtract, GDK_CONTROL_MASK, 0) ;
   gtk_widget_add_accelerator (zoom_extents_menu_item,            "activate", GTK_ACCEL_GROUP (accel_group), GDK_e,      GDK_CONTROL_MASK,                  GTK_ACCEL_VISIBLE);
   gtk_widget_add_accelerator (reset_zoom_menu_item,              "activate", GTK_ACCEL_GROUP (accel_group), GDK_1,      0,                                 GTK_ACCEL_VISIBLE);
   gtk_widget_add_accelerator (zoom_layer_menu_item,              "activate", GTK_ACCEL_GROUP (accel_group), GDK_l,      GDK_CONTROL_MASK,                  GTK_ACCEL_VISIBLE);
@@ -947,6 +953,7 @@ void create_main_window (main_W *main_window){
   g_signal_connect (G_OBJECT (clocks_combo),                                   "changed",  (GCallback)on_clocks_combo_changed,    clocks_combo);
   g_signal_connect_swapped (G_OBJECT (quit_menu_item),                         "activate", (GCallback)on_quit_menu_item_activate, main_window->main_window);
   // attach the necessary signals to the drawing area widget //
+  g_signal_connect (G_OBJECT (main_window->drawing_area), "realize", (GCallback)viewport_gestures_realize, NULL) ;
   g_signal_connect (G_OBJECT (main_window->drawing_area),                      "scroll_event",         (GCallback)scroll_event,                 NULL);
   g_signal_connect (G_OBJECT (main_window->drawing_area),                      "expose_event",         (GCallback)expose_event,                 NULL);
   g_signal_connect (G_OBJECT (main_window->drawing_area),                      "motion_notify_event",  (GCallback)drawing_area_motion_notify,   NULL);

@@ -632,7 +632,8 @@ QCADesigner-main.o: main.c /usr/include/stdc-predef.h \
  /usr/include/bits/mathcalls-helper-functions.h \
  /usr/include/bits/mathcalls.h /usr/include/bits/mathcalls-narrow.h \
  /usr/include/bits/iscanonical.h /usr/include/assert.h recent_files.h \
- qcadstock.h global_consts.h gtk_preamble.h
+ qcadstock.h global_consts.h gtk_preamble.h fileio.h coherence_vector.h \
+ coherence_vector_energy.h objects/QCADLabel.h
 /usr/include/stdc-predef.h:
 /usr/include/locale.h:
 /usr/include/features.h:
@@ -1415,3 +1416,7 @@ recent_files.h:
 qcadstock.h:
 global_consts.h:
 gtk_preamble.h:
+fileio.h:
+coherence_vector.h:
+coherence_vector_energy.h:
+objects/QCADLabel.h:

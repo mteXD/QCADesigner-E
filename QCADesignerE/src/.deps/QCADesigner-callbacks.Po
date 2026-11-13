@@ -621,11 +621,18 @@ QCADesigner-callbacks.o: callbacks.c /usr/include/stdc-predef.h \
  /usr/include/bits/fp-fast.h /usr/include/bits/mathcalls-macros.h \
  /usr/include/bits/mathcalls-helper-functions.h \
  /usr/include/bits/mathcalls.h /usr/include/bits/mathcalls-narrow.h \
- /usr/include/bits/iscanonical.h callbacks.h interface.h support.h \
- /usr/include/libintl.h /usr/include/locale.h /usr/include/bits/locale.h \
- simulation.h simulation_data.h design.h exp_array.h \
- objects/object_helpers.h objects/../hsl2rgb.h objects/QCADCell.h \
- objects/../gdk_structs.h objects/../exp_array.h \
+ /usr/include/bits/iscanonical.h /usr/include/gtk-2.0/gdk/gdkx.h \
+ /usr/include/gtk-2.0/gdk/gdkprivate.h /usr/include/X11/Xlib.h \
+ /usr/include/X11/X.h /usr/include/X11/Xfuncproto.h \
+ /usr/include/X11/Xosdefs.h /usr/include/X11/Xutil.h \
+ /usr/include/X11/keysym.h /usr/include/X11/keysymdef.h \
+ /usr/include/X11/extensions/XInput2.h /usr/include/X11/extensions/XI2.h \
+ /usr/include/X11/extensions/Xge.h /usr/include/X11/extensions/Xfixes.h \
+ /usr/include/X11/extensions/xfixeswire.h callbacks.h viewport_scroll.h \
+ interface.h support.h /usr/include/libintl.h /usr/include/locale.h \
+ /usr/include/bits/locale.h simulation.h simulation_data.h design.h \
+ exp_array.h objects/object_helpers.h objects/../hsl2rgb.h \
+ objects/QCADCell.h objects/../gdk_structs.h objects/../exp_array.h \
  objects/QCADDesignObject.h objects/mouse_handler_struct.h \
  objects/object_helpers.h objects/QCADUndoEntry.h objects/QCADLabel.h \
  objects/../exp_pixmap.h objects/QCADStretchyObject.h \
@@ -1393,7 +1400,22 @@ QCADesigner-callbacks.o: callbacks.c /usr/include/stdc-predef.h \
 /usr/include/bits/mathcalls.h:
 /usr/include/bits/mathcalls-narrow.h:
 /usr/include/bits/iscanonical.h:
+/usr/include/gtk-2.0/gdk/gdkx.h:
+/usr/include/gtk-2.0/gdk/gdkprivate.h:
+/usr/include/X11/Xlib.h:
+/usr/include/X11/X.h:
+/usr/include/X11/Xfuncproto.h:
+/usr/include/X11/Xosdefs.h:
+/usr/include/X11/Xutil.h:
+/usr/include/X11/keysym.h:
+/usr/include/X11/keysymdef.h:
+/usr/include/X11/extensions/XInput2.h:
+/usr/include/X11/extensions/XI2.h:
+/usr/include/X11/extensions/Xge.h:
+/usr/include/X11/extensions/Xfixes.h:
+/usr/include/X11/extensions/xfixeswire.h:
 callbacks.h:
+viewport_scroll.h:
 interface.h:
 support.h:
 /usr/include/libintl.h:

@@ -81,6 +81,7 @@ void set_client_dimension (int cxNew, int cyNew) ;
 void reset_zoom () ;
 void zoom_in ();
 void zoom_out ();
+void zoom_at_point (double factor, double x, double y) ;
 void zoom_window (int top_x, int top_y, int bot_x, int bot_y) ;
 void set_snap_source (void *new_snap_source) ;
 gboolean is_real_rect_visible (GdkRectangle *rc) ;

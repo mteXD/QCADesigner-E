@@ -66,6 +66,12 @@ PKG_CHECK_MODULES(GLIB, [$pkg_modules])
 pkg_modules="gobject-2.0 >= 2.0"
 PKG_CHECK_MODULES(GOBJECT, [$pkg_modules])
 
+dnl Optional native trackpad gestures for the GTK2 X11 backend.
+PKG_CHECK_MODULES(XINPUT, [xi >= 1.8 x11], [
+  GTK_CFLAGS="$GTK_CFLAGS $XINPUT_CFLAGS -DHAVE_XINPUT_GESTURES"
+  GTK_LIBS="$GTK_LIBS $XINPUT_LIBS"
+], [:])
+
 AC_SUBST(GTK_CFLAGS)
 AC_SUBST(GTK_LIBS)
 AC_SUBST(GTHREAD_CFLAGS)

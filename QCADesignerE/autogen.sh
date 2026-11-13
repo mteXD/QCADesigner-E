@@ -50,6 +50,7 @@ else
   aclocal -I ${ACLOCAL_INCLUDE}
 fi
 
-automake --gnu --add-missing
+# This checkout does not ship all documentation required by GNU strictness.
+automake --foreign --add-missing
 glib-gettextize -c
 autoconf

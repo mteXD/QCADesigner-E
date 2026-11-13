@@ -27,6 +27,7 @@
 //                                                      //
 //////////////////////////////////////////////////////////
 
+#include <math.h>
 #include "object_helpers.h"
 #include "../generic_utils.h"
 #include "../exp_array.h"
@@ -165,6 +166,18 @@ void zoom_in ()
 
 void reset_zoom ()
   {scale = 1.0 ;}
+
+// Keep the world point beneath the gesture stationary while scaling.
+void zoom_at_point (double factor, double x, double y)
+  {
+  double new_scale ;
+  if (!isfinite (factor) || factor <= 0 || !isfinite (x) || !isfinite (y)) return ;
+  new_scale = CLAMP (scale * factor, 0.001, 10000.0) ;
+  factor = new_scale / scale ;
+  subs_top_x = x - (x - subs_top_x) * factor ;
+  subs_top_y = y - (y - subs_top_y) * factor ;
+  scale = new_scale ;
+  }
 
 //!Zooms to the provided window dimensions.
 void zoom_window (int top_x, int top_y, int bot_x, int bot_y)

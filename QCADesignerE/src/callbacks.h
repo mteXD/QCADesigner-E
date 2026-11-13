@@ -33,6 +33,7 @@ void add_layer_button_clicked (GtkWidget *widget, gpointer data) ;
 void remove_layer_button_clicked (GtkWidget *widget, gpointer data) ;
 void layer_properties_button_clicked (GtkWidget *widget, gpointer data) ;
 void main_window_show (GtkWidget *widget, gpointer data) ;
+void viewport_gestures_realize (GtkWidget *widget, gpointer data) ;
 void on_mirror_button_clicked (GtkButton *button, gpointer user_data) ;
 void on_cell_properties_menu_item_activate (GtkMenuItem *menuitem, gpointer user_data);
 void on_show_tb_icons_menu_item_activate (GtkMenuItem * menuitem, gpointer user_data) ;
