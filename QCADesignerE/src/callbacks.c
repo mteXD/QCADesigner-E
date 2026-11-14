@@ -649,6 +649,13 @@ static void viewport_apply_pan (int dx, int dy, gpointer data)
   setup_rulers (x + dx, y + dy) ;
   }
 
+static void viewport_apply_zoom (double factor, double x, double y, gpointer data)
+  {
+  GtkWidget *widget = main_window.drawing_area ;
+  zoom_at_point (factor, widget->allocation.width / 2.0, widget->allocation.height / 2.0) ;
+  reflect_zoom () ;
+  }
+
 void viewport_gestures_realize (GtkWidget *widget, gpointer data)
   {
 #if defined(HAVE_XINPUT_GESTURES) && defined(GDK_WINDOWING_X11)
@@ -659,7 +666,7 @@ void viewport_gestures_realize (GtkWidget *widget, gpointer data)
   VIEWPORT_PINCH *pinch ;
 #endif
 
-  viewport_scroll_attach (widget, viewport_apply_pan, NULL) ;
+  viewport_scroll_attach (widget, viewport_apply_pan, viewport_apply_zoom, NULL) ;
 
 #if defined(HAVE_XINPUT_GESTURES) && defined(GDK_WINDOWING_X11)
 

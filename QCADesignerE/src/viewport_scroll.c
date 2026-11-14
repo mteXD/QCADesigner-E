@@ -15,6 +15,7 @@ typedef struct
   {
   GtkWidget *widget ;
   ViewportPanFunc apply ;
+  ViewportZoomFunc zoom ;
   gpointer data ;
   double remainder[2], pending[2] ;
   gint64 last_frame, deadline ;
@@ -52,6 +53,13 @@ void viewport_scroll_cancel (GtkWidget *widget)
   state->timer = 0 ;
   state->pending[0] = state->pending[1] = 0 ;
   state->remainder[0] = state->remainder[1] = 0 ;
+  }
+
+static void apply_zoom (ViewportScroll *state, double dy, double x, double y)
+  {
+  viewport_scroll_cancel (state->widget) ;
+  if (state->zoom && isfinite (dy) && dy != 0)
+    state->zoom (pow (1.2, CLAMP (dy / SCROLL_PIXELS, -10.0, 10.0)), x, y, state->data) ;
   }
 
 static gboolean wheel_frame (gpointer data)
@@ -164,15 +172,15 @@ static void native_motion (ViewportScroll *state, XIDeviceEvent *motion)
   if (motion->event != GDK_WINDOW_XID (state->widget->window) || !scroll_axis) return ;
   state->consumed[state->consumed_count++ % G_N_ELEMENTS (state->consumed)] = motion->time ;
   if (state->pinching) return ;
-  if (motion->mods.effective & GDK_CONTROL_MASK)
-    {
-    delta[0] += delta[1] ;
-    delta[1] = 0 ;
-    }
   if (motion->buttons.mask_len && motion->buttons.mask &&
       (XIMaskIsSet (motion->buttons.mask, 1) || XIMaskIsSet (motion->buttons.mask, 2) ||
        XIMaskIsSet (motion->buttons.mask, 3))) return ;
   if (!isfinite (delta[0]) || !isfinite (delta[1])) return ;
+  if ((motion->mods.effective & GDK_CONTROL_MASK) && delta[1] != 0)
+    {
+    apply_zoom (state, delta[1], motion->event_x, motion->event_y) ;
+    return ;
+    }
   if (delta[0] == 0 && delta[1] == 0) return ;
   if (device->trackpad || (fabs (delta[0]) < SCROLL_PIXELS && fabs (delta[1]) < SCROLL_PIXELS))
     {
@@ -278,13 +286,14 @@ static void scroll_unrealize (GtkWidget *widget, gpointer data)
   g_free (state) ;
   }
 
-void viewport_scroll_attach (GtkWidget *widget, ViewportPanFunc apply, gpointer data)
+void viewport_scroll_attach (GtkWidget *widget, ViewportPanFunc apply, ViewportZoomFunc zoom, gpointer data)
   {
   ViewportScroll *state ;
   if (g_object_get_data (G_OBJECT (widget), STATE_KEY)) return ;
   state = g_new0 (ViewportScroll, 1) ;
   state->widget = widget ;
   state->apply = apply ;
+  state->zoom = zoom ;
   state->data = data ;
   g_object_set_data (G_OBJECT (widget), STATE_KEY, state) ;
   g_signal_connect (widget, "unrealize", (GCallback)scroll_unrealize, state) ;
@@ -320,7 +329,11 @@ gboolean viewport_scroll_handle (GtkWidget *widget, GdkEventScroll *event)
     case GDK_SCROLL_RIGHT: dx = -SCROLL_PIXELS ; break ;
     default: return FALSE ;
     }
-  if (event->state & GDK_CONTROL_MASK) { dx += dy ; dy = 0 ; }
+  if ((event->state & GDK_CONTROL_MASK) && dy != 0)
+    {
+    apply_zoom (state, dy, event->x, event->y) ;
+    return TRUE ;
+    }
   queue_wheel (state, dx, dy) ;
   return TRUE ;
   }
