@@ -41,6 +41,9 @@
 #include "coherence_vector_energy.h"
 #include "graph_dialog_widget_data.h"
 #include "bistable_simulation.h"
+#include "objects/QCADLabel.h"
+#include "objects/QCADSubstrate.h"
+#include "objects/QCADRuler.h"
 
 extern bistable_OP bistable_options ;
 extern coherence_OP coherence_options ;
@@ -79,6 +82,14 @@ int main (int argc, char **argv)
   g_type_init () ;
 #endif /* def GTK_GUI */
 
+  /* The file reader resolves serialized object names with g_type_from_name.
+   * Unlike the GUI, batch mode has not created any objects to register them. */
+  qcad_layer_get_type () ;
+  qcad_cell_get_type () ;
+  qcad_label_get_type () ;
+  qcad_substrate_get_type () ;
+  qcad_ruler_get_type () ;
+
   if (pszSimEngine != NULL)
     sim_engine =
       !strncmp (pszSimEngine, "BISTABLE", sizeof ("BISTABLE") - 1)
@@ -100,6 +111,9 @@ int main (int argc, char **argv)
     fprintf (stderr, "Failed to open the circuit file !\n") ;
     return 3 ;
     }
+
+  fprintf (stderr, "Loaded circuit: %d inputs, %d outputs\n",
+    design->bus_layout->inputs->icUsed, design->bus_layout->outputs->icUsed) ;
 
   if (BISTABLE == sim_engine)
     {
@@ -161,6 +175,25 @@ int main (int argc, char **argv)
 
       if (NULL != (sim_data = run_simulation (sim_engine, EXHAUSTIVE_VERIFICATION, working_design, NULL)))
         {
+        char output_filename[256];
+
+        snprintf(
+            output_filename,
+            sizeof(output_filename),
+            "simulation-%04d.txt",
+            Nix
+        );
+
+        SIMULATION_OUTPUT output = {
+            .sim_data = sim_data,
+            .bus_layout = working_design->bus_layout,
+            .bFakeIOLists = FALSE
+        };
+
+        create_simulation_output_file(output_filename, &output);
+
+        fprintf(stderr, "Saved results to %s\n", output_filename);
+
         input_hcs = exp_array_new (sizeof (HONEYCOMB_DATA *), 1) ;
         output_hcs = exp_array_new (sizeof (HONEYCOMB_DATA *), 1) ;
         // For each bus, create the appropriate HONEYCOMB_DATA, fill it in with

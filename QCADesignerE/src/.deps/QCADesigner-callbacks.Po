@@ -625,9 +625,10 @@ QCADesigner-callbacks.o: callbacks.c /usr/include/stdc-predef.h \
  /usr/include/gtk-2.0/gdk/gdkprivate.h /usr/include/X11/Xlib.h \
  /usr/include/X11/X.h /usr/include/X11/Xfuncproto.h \
  /usr/include/X11/Xosdefs.h /usr/include/X11/Xutil.h \
- /usr/include/X11/keysym.h /usr/include/X11/keysymdef.h \
- /usr/include/X11/extensions/XInput2.h /usr/include/X11/extensions/XI2.h \
- /usr/include/X11/extensions/Xge.h /usr/include/X11/extensions/Xfixes.h \
+ /usr/include/X11/Xresource.h /usr/include/X11/keysym.h \
+ /usr/include/X11/keysymdef.h /usr/include/X11/extensions/XInput2.h \
+ /usr/include/X11/extensions/XI2.h /usr/include/X11/extensions/Xge.h \
+ /usr/include/X11/extensions/Xfixes.h \
  /usr/include/X11/extensions/xfixeswire.h callbacks.h viewport_scroll.h \
  interface.h support.h /usr/include/libintl.h /usr/include/locale.h \
  /usr/include/bits/locale.h simulation.h simulation_data.h design.h \
@@ -1407,6 +1408,7 @@ QCADesigner-callbacks.o: callbacks.c /usr/include/stdc-predef.h \
 /usr/include/X11/Xfuncproto.h:
 /usr/include/X11/Xosdefs.h:
 /usr/include/X11/Xutil.h:
+/usr/include/X11/Xresource.h:
 /usr/include/X11/keysym.h:
 /usr/include/X11/keysymdef.h:
 /usr/include/X11/extensions/XInput2.h:

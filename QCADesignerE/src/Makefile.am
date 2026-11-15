@@ -2,7 +2,7 @@
 
 AUTOMAKE_OPTIONS = subdir-objects
 
-bin_PROGRAMS = QCADesigner
+bin_PROGRAMS = QCADesigner batch_sim
 
 UNDO_REDO_FILES = \
 	objects/QCADUndoEntry.c      objects/QCADUndoEntry.h \
